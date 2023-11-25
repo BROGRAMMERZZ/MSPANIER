@@ -4,6 +4,7 @@ import com.example.microservice.entities.Item;
 import com.example.microservice.entities.Panier;
 import com.example.microservice.services.ItemService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
+@EnableEurekaClient
 @RequestMapping("/item")
 @RestController
 public class ItemController {

@@ -1,9 +1,10 @@
 package com.example.microservice.entities;
 
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.persistence.*;
 import java.util.Set;
 
 
@@ -18,7 +19,16 @@ public class Panier {
     private int idUser;
     private double prixtotal;
 
-    @OneToMany(mappedBy = "panier", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "panier", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<Item> items;
+
+    public void updatePrixtotal() {
+        if (items != null) {
+            prixtotal = items.stream().mapToDouble(Item::getPrixProduit).sum();
+        } else {
+            prixtotal = 0.0;
+        }
+    }
 
 }

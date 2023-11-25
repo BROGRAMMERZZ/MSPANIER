@@ -45,8 +45,6 @@ public class ItemService {
         }
     }
 
-
-    //Get all the items ByPanier   UFFOOO
     public List<Item> getItemsByPanier(Panier panier) {
         return itemRepository.findByPanier(panier);
     }

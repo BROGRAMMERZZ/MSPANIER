@@ -1,8 +1,10 @@
 package com.example.microservice.entities;
 
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
+
+import javax.persistence.*;
 
 @Getter
 @Setter
@@ -16,6 +18,7 @@ public class Item {
     private int qte;
     @ManyToOne
     @JoinColumn(name = "idPanier")
+    @JsonIgnore
     private Panier panier;
 
 
@@ -27,5 +30,12 @@ public class Item {
         this.idProduit = idProduit;
         this.prixProduit = prixProduit;
         this.qte = qte;
+    }
+
+    @PostUpdate
+    public void updatePanierPrixtotal() {
+        if (panier != null) {
+            panier.updatePrixtotal();
+        }
     }
 }

@@ -6,6 +6,8 @@ import com.example.microservice.repository.PanierRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -47,5 +49,32 @@ public class PanierService {
 
     public Optional<Item> getItemByIdInPanier(int panierId, int itemId) {
         return panierRepository.findItemByIdInPanier(panierId, itemId);
+    }
+
+
+    public Panier addItemsToPanier(int panierId, List<Item> items) {
+        Optional<Panier> optionalPanier = panierRepository.findById(panierId);
+        if (optionalPanier.isPresent()) {
+            Panier panier = optionalPanier.get();
+            for (Item item : items) {
+                item.setPanier(panier);
+            }
+            panier.getItems().addAll(items);
+            panier.updatePrixtotal();
+            return panierRepository.save(panier);
+        } else {
+            return null;
+        }
+    }
+
+    public Panier createPanierWithItems(Panier panier, List<Item> items) {
+        for (Item item : items) {
+            item.setPanier(panier);
+        }
+
+        panier.setItems(new HashSet<>(items));
+        panier.updatePrixtotal();
+
+        return panierRepository.save(panier);
     }
 }
