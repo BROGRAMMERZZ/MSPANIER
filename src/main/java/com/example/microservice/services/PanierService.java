@@ -6,75 +6,126 @@ import com.example.microservice.repository.PanierRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+
 
 @Service
-public class PanierService {
+public class PanierService implements IPanierService {
 
     @Autowired
     private PanierRepo panierRepository;
+    @Autowired
+    private ItemService itemService;
 
-    public Panier addPanier(Panier panier) {
-        return panierRepository.save(panier);
+
+    @Override
+    public Panier createPanierIfUserDontHaveOne(long idUser) {
+        Panier p = panierRepository.findByIdUser(idUser);
+        if (p==null){
+            panierRepository.save(new Panier(idUser,0.0));
+            return p;
+        }else
+            return p;
     }
 
-    public Optional<Panier> getPanierById(int id) {
-        return panierRepository.findById(id);
+    @Override
+    public Panier getPanierWithItems(long idUser) {
+        return panierRepository.findByIdUser(idUser);
     }
 
-    public Panier updatePanier(int id, Panier newPanier) {
-        Optional<Panier> optionalPanier = panierRepository.findById(id);
-        if (optionalPanier.isPresent()) {
-            Panier existingPanier = optionalPanier.get();
-            existingPanier.setIdUser(newPanier.getIdUser());
-            existingPanier.setPrixtotal(newPanier.getPrixtotal());
-            // Update other fields as needed
-            return panierRepository.save(existingPanier);
+    @Override
+    public List<Panier> getAll() {
+        return panierRepository.findAll();
+    }
+
+
+    @Override
+    public Panier updatePanier(long idUser, List<Item> items) {
+        Panier panier = panierRepository.findByIdUser(idUser);
+        if (panier == null) {
+            throw new RuntimeException("There's no such panier for that user");
         } else {
-            return null; // Handle non-existing panier scenario
-        }
-    }
+            Set<Item> itemSet = new HashSet<>(items);
 
-    public String deletePanier(int id) {
-        if (panierRepository.existsById(id)) {
-            panierRepository.deleteById(id);
-            return "Panier supprimé";
-        } else {
-            return "Panier non supprimé"; // Handle non-existing panier scenario
-        }
-    }
-
-
-    public Optional<Item> getItemByIdInPanier(int panierId, int itemId) {
-        return panierRepository.findItemByIdInPanier(panierId, itemId);
-    }
-
-
-    public Panier addItemsToPanier(int panierId, List<Item> items) {
-        Optional<Panier> optionalPanier = panierRepository.findById(panierId);
-        if (optionalPanier.isPresent()) {
-            Panier panier = optionalPanier.get();
-            for (Item item : items) {
+            for (Item item : itemSet) {
                 item.setPanier(panier);
             }
-            panier.getItems().addAll(items);
+
+            panier.setItems(itemSet);
             panier.updatePrixtotal();
-            return panierRepository.save(panier);
-        } else {
-            return null;
+            panierRepository.save(panier);
+            return panier;
         }
     }
 
-    public Panier createPanierWithItems(Panier panier, List<Item> items) {
-        for (Item item : items) {
-            item.setPanier(panier);
-        }
 
-        panier.setItems(new HashSet<>(items));
-        panier.updatePrixtotal();
-
-        return panierRepository.save(panier);
+    @Override
+    public void deletePanier(long idUser) {
+        panierRepository.deleteById(panierRepository.findByIdUser(idUser).getIdPanier());
     }
+
+    @Override
+    public Panier findPanierByIdUser(long idUser) {
+        return panierRepository.findByIdUser(idUser);
+    }
+
+    public void deletePanierIdPanier(long idPanier) {
+        panierRepository.deleteById(idPanier);
+    }
+
+
+
+
+
+//    public Panier addPanierWithItems(int idUser, List<Item> items) {
+//        Panier panier = Panier.builder()
+//                .idUser(idUser)
+//                .items(items)
+//                .build();
+//        System.out.println("IDUSER IS ====="+idUser);
+//        System.out.println("ITEEEEMMMMSSS =====     "+panier.getIdUser()+ panier.getPrixtotal());
+//        for (Item item : items) {
+//            item.setPanier(panier);
+//            System.out.println("TRASH");
+//        }
+//        panier.updatePrixtotal();
+//        panier = panierRepository.save(panier);
+//        return panier;
+//    }
+//
+//    public Panier addPanier(int idUser, List<Item> items) {
+//        Panier panier = Panier.builder()
+//                .idUser(idUser)
+//                .items(items)
+//                .build();
+//        panier.updatePrixtotal();
+//        return panierRepository.save(panier);
+//    }
+//
+//    public Optional<Panier> findById(int idPanier) {
+//        return panierRepository.findById(idPanier);
+//    }
+//
+//    public Panier findByUserId(int idUser) {
+//        return panierRepository.findByIdUser(idUser);
+//    }
+//
+//    public Panier updatePanier(int idPanier, List<Item> newItems) {
+//        Optional<Panier> optionalPanier = panierRepository.findById(idPanier);
+//        System.out.println("Itemnsare "+newItems);
+//        if (optionalPanier.isPresent()) {
+//            Panier panier = optionalPanier.get();
+//            panier.setItems(newItems);
+//            panier.updatePrixtotal();
+//            return panierRepository.save(panier);
+//        } else {
+//            return null;
+//        }
+//    }
+
+
 }

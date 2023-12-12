@@ -2,7 +2,9 @@ package com.example.microservice.controller;
 
 import com.example.microservice.entities.Item;
 import com.example.microservice.entities.Panier;
+import com.example.microservice.request.NewPanier;
 import com.example.microservice.request.PanierWithItemsRequest;
+import com.example.microservice.services.ItemService;
 import com.example.microservice.services.PanierService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
@@ -16,63 +18,75 @@ import java.util.Optional;
 
 
 @EnableEurekaClient
-@RequestMapping("/panier")
+@RequestMapping("/panierRestController")
 @RestController
 public class PanierController {
 
     @Autowired
     private PanierService panierService;
 
-    @PostMapping(value = "/createWithItems", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Autowired
+    private ItemService itemService;
+
+    @GetMapping("/GetPanier")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Panier> createPanierWithItems(@RequestBody PanierWithItemsRequest request) {
-        Panier panier = request.getPanier();
-        List<Item> items = request.getItems();
-
-        Panier createdPanier = panierService.createPanierWithItems(panier, items);
-
-        return new ResponseEntity<>(createdPanier, HttpStatus.OK);
+    public Panier getPanier(@RequestParam long idUser) {
+        return panierService.createPanierIfUserDontHaveOne(idUser);
     }
 
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping("/GetAllPanier")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Panier> createPanier(@RequestBody Panier panier) {
-        return new ResponseEntity<>(panierService.addPanier(panier), HttpStatus.OK);
+    public List<Panier> getAllPaniers() {
+        return panierService.getAll();
     }
 
-    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping("/GetPanierWithItems")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Optional<Panier>> getPanier(@PathVariable(value = "id") int id) {
-        return new ResponseEntity<>(panierService.getPanierById(id), HttpStatus.OK);
+    public Panier getPanierWithItems(@RequestParam long idUser) {
+        return panierService.getPanierWithItems(idUser);
     }
 
-    @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping("/UpdatePanier/{idUser}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Panier> updatePanier(@PathVariable(value = "id") int id,
-                                               @RequestBody Panier panier) {
-        return new ResponseEntity<>(panierService.updatePanier(id, panier), HttpStatus.OK);
+    public Panier updatePanier(@PathVariable("idUser") long idUser,@RequestBody List<Item> items) {
+        return panierService.updatePanier(idUser, items);
     }
 
-    @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping("/deletePanier/{idUser}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<String> deletePanier(@PathVariable(value = "id") int id) {
-        return new ResponseEntity<>(panierService.deletePanier(id), HttpStatus.OK);
+    public void deletePanier(@PathVariable("idUser") long idUser) {
+        panierService.deletePanier(idUser);
     }
 
-    @GetMapping(value = "/getById/{panierId}/item/{itemId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Optional<Item>> getItemByIdInPanier(
-            @PathVariable(value = "panierId") int panierId,
-            @PathVariable(value = "itemId") int itemId) {
-        return new ResponseEntity<>(panierService.getItemByIdInPanier(panierId, itemId), HttpStatus.OK);
-    }
 
-    @PostMapping(value = "/{panierId}/addItems", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Panier> addItemsToPanier(@PathVariable(value = "panierId") int panierId,
-                                                   @RequestBody List<Item> items) {
-        Panier updatedPanier = panierService.addItemsToPanier(panierId, items);
-        return new ResponseEntity<>(updatedPanier, HttpStatus.OK);
-    }
+
+
+//    @GetMapping("/getPanier/{idPanier}")
+//    public ResponseEntity<Panier> getPanierById(@PathVariable(value = "idPanier") int idPanier) {
+//        Optional<Panier> panier = panierService.findById(idPanier);
+//        return panier.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
+//                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+//    }
+
+//    @GetMapping("/getPanierByUserId/{idUser}")
+//    public ResponseEntity<Panier> getPanierByUserId(@PathVariable(value = "idUser") int idUser) {
+//        Optional<Panier> panier = Optional.ofNullable(panierService.findByUserId(idUser));
+//        return panier.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
+//                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+//    }
+//
+//    @PutMapping("/updatePanier/{idPanier}")
+//    public ResponseEntity<Panier> updatePanier(@PathVariable int idPanier, @RequestBody List<Item> newItems) {
+//        Panier updatedPanier = panierService.updatePanier(idPanier, newItems);
+//        return updatedPanier != null
+//                ? new ResponseEntity<>(updatedPanier, HttpStatus.OK)
+//                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+//    }
+//
+//    @DeleteMapping("/deletePanier/{idPanier}")
+//    public ResponseEntity<String> deletePanier(@PathVariable(value = "idPanier") int idPanier) {
+////        panierService.deletePanier(idPanier);
+//        return new ResponseEntity<>("Panier supprimé", HttpStatus.OK);
+//    }
 
 }

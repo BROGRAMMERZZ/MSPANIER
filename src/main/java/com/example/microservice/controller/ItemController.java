@@ -2,6 +2,7 @@ package com.example.microservice.controller;
 
 import com.example.microservice.entities.Item;
 import com.example.microservice.entities.Panier;
+import com.example.microservice.repository.PanierRepo;
 import com.example.microservice.services.ItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
@@ -14,41 +15,51 @@ import java.util.List;
 import java.util.Optional;
 
 @EnableEurekaClient
-@RequestMapping("/item")
+@RequestMapping("/itemRestController")
 @RestController
 public class ItemController {
 
     @Autowired
     private ItemService itemService;
+    @Autowired
+    private PanierRepo panierRepo;
 
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping
     public ResponseEntity<Item> createItem(@RequestBody Item item) {
-        return new ResponseEntity<>(itemService.addItem(item), HttpStatus.OK);
+        Item newItem = itemService.addItem(item);
+        return new ResponseEntity<>(newItem, HttpStatus.CREATED);
     }
 
-    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Optional<Item>> getItem(@PathVariable(value = "id") int id) {
-        return new ResponseEntity<>(itemService.getItemById(id), HttpStatus.OK);
+    @GetMapping("/{idItem}")
+    public ResponseEntity<Item> getItemById(@PathVariable int idItem) {
+        Optional<Item> item = itemService.getItemById(idItem);
+        return item.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Item> updateItem(@PathVariable(value = "id") int id,
-                                           @RequestBody Item newItem) {
-        return new ResponseEntity<>(itemService.updateItem(id, newItem), HttpStatus.OK);
+    @GetMapping("/findall/{idPanier}")
+    public ResponseEntity<List<Item>> findAllByPanier(@PathVariable int idPanier) {
+        Panier panier = panierRepo.findByIdPanier(idPanier);
+        List<Item> items = itemService.getItemsByPanier(panier);
+        return items.isEmpty()
+                ? new ResponseEntity<>(HttpStatus.NOT_FOUND)
+                : new ResponseEntity<>(items, HttpStatus.OK);
     }
 
-    @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<String> deleteItem(@PathVariable(value = "id") int id) {
-        return new ResponseEntity<>(itemService.deleteItem(id), HttpStatus.OK);
+    @PutMapping("/{idItem}")
+    public ResponseEntity<Item> updateItem(@PathVariable int idItem,
+                                           @RequestBody Item item) {
+        Item updatedItem = itemService.updateItem(idItem, item);
+        return updatedItem != null
+                ? new ResponseEntity<>(updatedItem, HttpStatus.OK)
+                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    @GetMapping(value = "/getByPanier", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<List<Item>> getItemsByPanier(@RequestParam Panier panier) {
-        return new ResponseEntity<>(itemService.getItemsByPanier(panier), HttpStatus.OK);
+    @DeleteMapping("/{idItem}")
+    public ResponseEntity<String> deleteItem(@PathVariable int idItem) {
+        String result = itemService.deleteItem(idItem);
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 }
+
+

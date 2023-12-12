@@ -27,7 +27,6 @@ public class ItemService {
         Optional<Item> optionalItem = itemRepository.findById(id);
         if (optionalItem.isPresent()) {
             Item existingItem = optionalItem.get();
-            existingItem.setIdProduit(newItem.getIdProduit());
             existingItem.setPrixProduit(newItem.getPrixProduit());
             existingItem.setQte(newItem.getQte());
             return itemRepository.save(existingItem);

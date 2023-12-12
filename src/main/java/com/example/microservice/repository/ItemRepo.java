@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface ItemRepo extends JpaRepository<Item,Integer> {
     List<Item> findByPanier(Panier panier);
+
 }
