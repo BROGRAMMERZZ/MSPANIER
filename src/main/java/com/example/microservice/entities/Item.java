@@ -13,7 +13,6 @@ public class Item {
     @Id
     @GeneratedValue
     private int idItem;
-    private int idProduit;
     private double prixProduit;
     private int qte;
     @ManyToOne
